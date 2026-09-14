@@ -1,0 +1,14 @@
+{
+  "_comment": "Реквизиты подписантов и параметры прогона. Меняйте под свой проект. В вебе эти поля можно переопределить прямо в форме. izyskaniya/gosexpertiza = null, если строки не нужны; иначе объект {name, osn, value, column}, column: 'izysk' (инж.изыскания) или 'proj' (проектные работы).",
+  "org_short": "ООО «Проектная организация»",
+  "org_dir_title1": "Заместитель генерального директора -",
+  "org_dir_title2": "директор по проектированию",
+  "org_dir_name": "И.И. Иванов",
+  "gip_name": "П.П. Петров",
+  "cust_dir_title": "Директор",
+  "cust_dir_title2": "Заказчик",
+  "cust_dir_name": "С.С. Сидоров",
+  "vat_rate": 0.22,
+  "izyskaniya": null,
+  "gosexpertiza": null
+}
