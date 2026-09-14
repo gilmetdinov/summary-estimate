@@ -1,0 +1,29 @@
+# --- Локальные исходники/образцы данных (реальные сметы заказчиков не коммитим) ---
+# example.xlsx нужен только для перегенерации template.xlsx (make_template.py),
+# raw.xlsx — образец входа для тестов. Сам мастер-шаблон template.xlsx коммитится.
+sources/
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# --- Виртуальные окружения ---
+.venv/
+venv/
+env/
+
+# --- Сборка PyInstaller ---
+build/
+dist/
+*.manifest
+
+# --- Локальные настройки инструментов ---
+.claude/settings.local.json
+.idea/
+.vscode/
+
+# --- Мусор ОС ---
+.DS_Store
+Thumbs.db
