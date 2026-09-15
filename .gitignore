@@ -24,6 +24,12 @@ dist/
 .idea/
 .vscode/
 
+# --- Рабочие заметки (схлопнуты в README, не для репо) ---
+docs/
+ROADMAP.md
+TODO.md
+БЕТА.md
+
 # --- Мусор ОС ---
 .DS_Store
 Thumbs.db

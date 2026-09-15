@@ -49,9 +49,11 @@ python3 smoke_test.py путь/выгрузка.xlsx
 python3 smeta_parser.py sources/raw.xlsx   # отдельно — проверка модели парсера
 ```
 
-**Сборка автономного `.exe` (для раздачи без Python):** см. `БЕТА.md`. Коротко —
-`build.bat` на Windows (PyInstaller кросс-компиляцию не умеет, exe собирается только
-на винде); `build.sh` на macOS/Linux для локальной проверки сборки.
+**Сборка автономного `.exe` (для раздачи без Python):** PyInstaller кросс-компиляцию не
+умеет, поэтому Windows-`.exe` собирается только на Windows — двойной клик по `build.bat`
+(идемпотентный venv + `--clean`), результат `dist/summary-estimate.exe` (донор оформления,
+дефолтный `config.json` и иконка уже вшиты). На macOS/Linux `bash build.sh` даёт локальный
+бинарь для проверки. Перед сборкой при изменении эталона — `python3 make_template.py`.
 
 ### Файлы
 
@@ -71,7 +73,7 @@ python3 smeta_parser.py sources/raw.xlsx   # отдельно — проверк
 | `build.spec` / `build.bat` / `build.sh` | сборка автономного бинаря (PyInstaller) |
 | `app.ico` / `app_icon.png` | иконка приложения (файл exe + окно/панель задач) |
 | `requirements.txt` / `requirements-build.txt` | рантайм / сборочные зависимости |
-| `README.md` / `ROADMAP.md` / `CLAUDE.md` / `БЕТА.md` | документация |
+| `README.md` / `CLAUDE.md` | документация |
 
 **Локальные данные `sources/` (в `.gitignore`, не коммитятся):**
 
