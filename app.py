@@ -32,8 +32,9 @@ except ImportError:  # pragma: no cover
 
 from config import load_config, config_from_strings, Config
 from smeta_render import convert, convert_batch, suggest_name
+from version import __version__
 
-APP_TITLE = "Конвертер смет ПИР"
+APP_TITLE = f"Конвертер смет ПИР — {__version__}"
 
 
 def resource_path(name: str) -> str:
@@ -102,7 +103,7 @@ class App:
     def _build(self):
         pad = {"padx": 10, "pady": 4}
         ttk.Label(self.root, text=APP_TITLE, font=("", 14, "bold")).pack(anchor="w", padx=12, pady=(10, 0))
-        ttk.Label(self.root, wraplength=600, foreground="#555",
+        ttk.Label(self.root, wraplength=700, foreground="#555",
                   text="Выгрузка из Гранд Сметы / Адепта (.xlsx) → фирменный комплект "
                        "(листы смет + сводная). Можно несколько выгрузок сразу.").pack(anchor="w", padx=12)
 
