@@ -10,9 +10,25 @@ name: build-windows-exe
 #
 # Версия exe — из version.py. Новый релиз: поменять __version__,
 # закоммитить, поставить тег v<версия> (напр. v2026.10.15), запушить тег.
-# Сметчица качает exe со страницы Releases (артефакты протухают за 90 дней).
+# Сметчица качает exe со страницы Releases (артефакты живут 7 дней).
+#
+# ПРИВАТНАЯ СБОРКА (с реальными реквизитами, не заглушками):
+#   - значения лежат в секрете репозитория SMETA_CONFIG_JSON (Settings ->
+#     Secrets and variables -> Actions), в открытом виде нигде не светятся;
+#   - запуск: Actions -> build-windows-exe -> Run workflow -> поставить галочку
+#     private_config. В карточке запуска виден только сам факт галочки,
+#     значения секрета GitHub подменяет на *** в логах.
+#   - ВНИМАНИЕ: артефакт публичного репо технически скачиваем посторонними,
+#     поэтому после скачивания удали его (Artifacts -> корзина) либо качай
+#     сразу и удаляй запуск. В Releases приватные сборки НЕ публикуем —
+#     release-job срабатывает только на тегах, а теги собираются без секрета.
 on:
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      private_config:
+        description: "Собрать с реальными реквизитами из секрета SMETA_CONFIG_JSON"
+        type: boolean
+        default: false
   push:
     branches: [master]
     tags: ["v*"]
@@ -43,15 +59,30 @@ jobs:
       - name: Run tests
         run: python -m pytest tests/ -q
 
+      - name: Apply private config (only manual runs with the toggle)
+        if: inputs.private_config == true
+        env:
+          SMETA_CONFIG_JSON: ${{ secrets.SMETA_CONFIG_JSON }}
+        run: |
+          if ([string]::IsNullOrEmpty($env:SMETA_CONFIG_JSON)) {
+            Write-Error "Секрет SMETA_CONFIG_JSON пуст или не задан — приватная сборка невозможна."
+            exit 1
+          }
+          # Значение секрета в лог не печатаем — GitHub всё равно замаскирует,
+          # но лучше не давать ему повода.
+          Set-Content -Path config.json -Value $env:SMETA_CONFIG_JSON -Encoding UTF8
+          python -c "import json; d=json.load(open('config.json', encoding='utf-8')); print('private config OK, keys:', sorted(d.keys()))"
+
       - name: Build exe (PyInstaller)
         run: pyinstaller --noconfirm --clean build.spec
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: summary-estimate-exe
+          name: summary-estimate-exe${{ inputs.private_config == true && '-private' || '' }}
           path: dist/summary-estimate.exe
           if-no-files-found: error
+          retention-days: 7
 
   release:
     # Только для тегов v*: забирает exe из сборки выше и кладёт в Releases.
