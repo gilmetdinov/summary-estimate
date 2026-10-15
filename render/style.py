@@ -10,6 +10,7 @@ import re
 from copy import copy
 
 from openpyxl.utils import range_boundaries
+from openpyxl.worksheet.properties import PageSetupProperties
 
 # суффикс номера сметы -> номер приложения в печатной форме
 SUFFIX_APP = {"01.01": "1.1", "01.02": "1.2", "02.01": "2.1", "02.02": "2.2", "03": "3"}
@@ -93,3 +94,29 @@ def unique_name(name: str, used: set) -> str:
     out = f"{stem}_{i}{ext}"
     used.add(out)
     return out
+
+
+def apply_page_setup(ws, donor_ws, fit_width=False):
+    """Наследует печатные настройки с листа-донора (точечное наследование).
+
+    Копирует ориентацию, формат бумаги, поля и сквозные строки/столбцы —
+    лист, собранный с нуля, иначе их теряет. fit_width=True включает
+    вписывание по ширине страницы (как выгрузка ГС) вместо фикс. масштаба.
+    """
+    src, dst = donor_ws.page_setup, ws.page_setup
+    dst.orientation = src.orientation or "portrait"
+    if src.paperSize:
+        dst.paperSize = src.paperSize
+    m_src, m_dst = donor_ws.page_margins, ws.page_margins
+    for attr in ("left", "right", "top", "bottom", "header", "footer"):
+        setattr(m_dst, attr, getattr(m_src, attr))
+    if donor_ws.print_title_rows:
+        ws.print_title_rows = donor_ws.print_title_rows
+    if donor_ws.print_title_cols:
+        ws.print_title_cols = donor_ws.print_title_cols
+    if fit_width:
+        dst.fitToWidth = 1
+        dst.fitToHeight = 0
+        ws.sheet_properties.pageSetUpPr = PageSetupProperties(fitToPage=True)
+    elif src.scale:
+        dst.scale = src.scale

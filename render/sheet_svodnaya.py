@@ -4,12 +4,10 @@
 from __future__ import annotations
 from copy import copy
 
-from openpyxl.worksheet.properties import PageSetupProperties
-
 from smeta_parser import Smeta
 from config import Config
 from render.donor import Donor
-from render.style import clean_quotes, merge_block, put
+from render.style import apply_page_setup, clean_quotes, merge_block, put
 
 
 def render_svodnaya(wb, smetas: list[Smeta], refs: list[dict], d: Donor, cfg: Config):
@@ -160,9 +158,8 @@ def render_svodnaya(wb, smetas: list[Smeta], refs: list[dict], d: Donor, cfg: Co
     put(ws, R, 2, cfg.cust_dir_title2, V["B39"], c2=3)
     put(ws, R, 4, "(подпись)", V["D35"], c2=5)
 
-    ws.print_area = f"A1:S{R}"
-    ws.page_setup.orientation = "portrait"
-    ws.page_setup.fitToWidth = 1
-    ws.page_setup.fitToHeight = 0
-    ws.sheet_properties.pageSetUpPr = PageSetupProperties(fitToPage=True)
+    # печать — только видимые колонки A..G (служебные L/M/O/P за областью);
+    # поля/бумага наследуются с донора, ширина вписывается в страницу
+    ws.print_area = f"A1:G{R}"
+    apply_page_setup(ws, V, fit_width=True)
     return ws
