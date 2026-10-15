@@ -9,7 +9,7 @@ from openpyxl.utils import get_column_letter
 from smeta_parser import Smeta
 from config import Config
 from render.donor import Donor
-from render.style import appendix, clean_quotes, merge_block, put
+from render.style import appendix, apply_page_setup, clean_quotes, merge_block, put
 
 
 def render_smeta(wb, sm: Smeta, d: Donor, title: str, cfg: Config) -> dict:
@@ -66,9 +66,11 @@ def render_smeta(wb, sm: Smeta, d: Donor, title: str, cfg: Config) -> dict:
 
     R = 22
     n_items = 0
-    for sec in sm.sections:
+    sec_total_addrs: list[str] = []
+    for si, sec in enumerate(sm.sections, start=1):
         put(ws, R, 1, sec.title, S["A22"], c2=5, height=15.0)
         R += 1
+        item_rows: list[int] = []
         for it in sec.items:
             n_items += 1
             put(ws, R, 1, it.n, S["A23"])
@@ -76,6 +78,7 @@ def render_smeta(wb, sm: Smeta, d: Donor, title: str, cfg: Config) -> dict:
             put(ws, R, 3, it.osn, S["C23"])
             put(ws, R, 4, it.calc, S["D23"])
             put(ws, R, 5, it.total, S["E23"])
+            item_rows.append(R)
             R += 1
             for sl in it.sublines:
                 put(ws, R, 1, None, S["A28"])
@@ -85,20 +88,36 @@ def render_smeta(wb, sm: Smeta, d: Donor, title: str, cfg: Config) -> dict:
                 val = sl.value if sl.value is not None else None
                 put(ws, R, 5, val, S["E28"])
                 R += 1
+        # --- итог по разделу — формулой по позициям (живой пересчёт, как в ГС) ---
+        if len(sm.sections) == 1:
+            sec_label = f"Итого по разделу 1 {sec.title.replace('Раздел 1.', '').strip()}"
+        else:
+            t = sec.title.strip()
+            sec_label = f"Итого по {t[:1].lower()}{t[1:]}" if t else f"Итого по разделу {si}"
+        sec_sum = ("=SUM(" + ",".join(f"E{r}" for r in item_rows) + ")"
+                   if item_rows else None)
+        # колонка D (4) пишется явно: без неё у ячейки нет границ -> «дыра» в рамке таблицы
+        put(ws, R, 1, None, S["A49"]); put(ws, R, 2, sec_label, S["B49"], c2=3, height=15.0); put(ws, R, 4, None, S["D49"]); put(ws, R, 5, sec_sum, S["E49"], height=15.0)
+        sec_total_addrs.append(f"E{R}")
+        R += 1
 
-    # --- итоги (без НДС — НДС только в св.смете) ---
-    # колонка D (4) пишется явно: без неё у ячейки нет границ -> «дыра» в рамке таблицы
-    sec_kind = sm.sections[0].title.replace("Раздел 1.", "").strip() if sm.sections else ""
-    put(ws, R, 1, None, S["A49"]); put(ws, R, 2, f"Итого по разделу 1 {sec_kind}", S["B49"], c2=3, height=15.0); put(ws, R, 4, None, S["D49"]); put(ws, R, 5, sm.subtotal_no_vat, S["E49"], height=15.0)
-    R += 1
+    # --- итоги по смете: НДС и ВСЕГО — живыми формулами, не константами ---
     put(ws, R, 1, None, S["A50"]); put(ws, R, 2, "Итоги по смете:", S["B50"], c2=3, height=15.0); put(ws, R, 4, None, S["D50"]); put(ws, R, 5, None, S["E51"], height=15.0)
     R += 1
     subtotal_addr = f"E{R}"
-    put(ws, R, 1, None, S["A51"]); put(ws, R, 2, f"     Итого Поз. 1-{n_items}", S["B51"], c2=3, height=15.0); put(ws, R, 4, None, S["D51"]); put(ws, R, 5, sm.subtotal_no_vat, S["E51"], height=15.0)
+    subtotal_val = ("=SUM(" + ",".join(sec_total_addrs) + ")"
+                    if sec_total_addrs else sm.subtotal_no_vat)
+    put(ws, R, 1, None, S["A51"]); put(ws, R, 2, f"     Итого Поз. 1-{n_items}", S["B51"], c2=3, height=15.0); put(ws, R, 4, None, S["D51"]); put(ws, R, 5, subtotal_val, S["E51"], height=15.0)
+    R += 1
+    nds_addr = f"E{R}"
+    put(ws, R, 1, None, S["A52"]); put(ws, R, 2, f"     НДС {cfg.vat_pct}%", S["B52"], c2=3, height=15.0); put(ws, R, 4, None, S["D52"]); put(ws, R, 5, f"=ROUND({subtotal_addr}*{cfg.vat_rate},5)", S["E52"], height=15.0)
+    R += 1
+    vstotal_addr = f"E{R}"
+    put(ws, R, 1, None, S["A53"]); put(ws, R, 2, "     ВСЕГО по смете", S["B53"], c2=3, height=15.0); put(ws, R, 4, None, S["D53"]); put(ws, R, 5, f"={subtotal_addr}+{nds_addr}", S["E53"], height=15.0)
     R += 2
 
-    # --- сумма прописью (без НДС, ссылается на субтотал) ---
-    put(ws, R, 1, d.propis_for_smeta(subtotal_addr), S["A55"], c2=5, height=12.75)
+    # --- сумма прописью (с НДС, ссылается на ВСЕГО — как в эталоне) ---
+    put(ws, R, 1, d.propis_for_smeta(vstotal_addr), S["A55"], c2=5, height=12.75)
     R += 1
     put(ws, R, 1, "(сумма прописью)", S["A56"], c2=5, height=12.75)
     R += 2
@@ -122,8 +141,8 @@ def render_smeta(wb, sm: Smeta, d: Donor, title: str, cfg: Config) -> dict:
     put(ws, R, 1, '" _____ " ________________ 20__ г.', S["A64"], c2=2, height=12.75); R += 1
     put(ws, R, 1, "М.П.", S["A65"], height=12.75)
 
-    # печать
+    # печать: область — только видимые колонки; поля/бумага/сквозные строки
+    # наследуются с донора, ширина вписывается в страницу
     ws.print_area = f"A1:E{R}"
-    ws.page_setup.orientation = "portrait"
-    ws.page_setup.scale = 68
+    apply_page_setup(ws, S, fit_width=True)
     return {"title": title, "subtotal_addr": subtotal_addr}

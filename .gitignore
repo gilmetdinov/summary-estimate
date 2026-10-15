@@ -19,6 +19,10 @@ build/
 dist/
 *.manifest
 
+# --- Готовые результаты конвертации (вывод программы, не коммитим) ---
+*.xlsx
+!template.xlsx
+
 # --- Локальные настройки инструментов ---
 .claude/settings.local.json
 .idea/

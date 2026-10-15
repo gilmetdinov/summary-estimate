@@ -27,8 +27,8 @@ class Donor:
         self.propis_svod = str(self._wf[SVOD_DONOR]["C30"].value)
 
     def propis_for_smeta(self, addr: str) -> str:
-        return re.sub(r"\bE53\b", addr,
-                      self.propis_smeta.replace("с НДС", "без НДС"))
+        # подпись «с НДС» — как в эталоне: сумма считается от ВСЕГО по смете
+        return re.sub(r"\bE53\b", addr, self.propis_smeta)
 
     def propis_for_svod(self, addr: str) -> str:
         return re.sub(r"\bG28\b", addr, self.propis_svod)

@@ -8,7 +8,7 @@ from openpyxl.utils import get_column_letter
 
 from config import Config
 from render.donor import Donor
-from render.style import clean_quotes, merge_block, put
+from render.style import apply_page_setup, clean_quotes, merge_block, put
 
 
 def render_izyskaniya_placeholder(wb, d: Donor, cfg: Config,
@@ -87,9 +87,15 @@ def render_izyskaniya_placeholder(wb, d: Donor, cfg: Config,
     put(ws, R, 1, None, S["A51"]); put(ws, R, 2, "     Итого Поз. 1-3", S["B51"], c2=3, height=15.0); put(ws, R, 4, None, S["D51"])
     sum_range = ",".join(f"E{r}" for r in range(first_data, last_data + 1, 3))
     put(ws, R, 5, f"=SUM({sum_range})", S["E51"], height=15.0)
+    R += 1
+    nds_addr = f"E{R}"
+    put(ws, R, 1, None, S["A52"]); put(ws, R, 2, f"     НДС {cfg.vat_pct}%", S["B52"], c2=3, height=15.0); put(ws, R, 4, None, S["D52"]); put(ws, R, 5, f"=ROUND({subtotal_addr}*{cfg.vat_rate},5)", S["E52"], height=15.0)
+    R += 1
+    vstotal_addr = f"E{R}"
+    put(ws, R, 1, None, S["A53"]); put(ws, R, 2, "     ВСЕГО по смете", S["B53"], c2=3, height=15.0); put(ws, R, 4, None, S["D53"]); put(ws, R, 5, f"={subtotal_addr}+{nds_addr}", S["E53"], height=15.0)
     R += 2
 
-    put(ws, R, 1, d.propis_for_smeta(subtotal_addr), S["A55"], c2=5, height=12.75)
+    put(ws, R, 1, d.propis_for_smeta(vstotal_addr), S["A55"], c2=5, height=12.75)
     R += 1
     put(ws, R, 1, "(сумма прописью)", S["A56"], c2=5, height=12.75)
     R += 2
@@ -114,6 +120,5 @@ def render_izyskaniya_placeholder(wb, d: Donor, cfg: Config,
     put(ws, R, 1, "М.П.", S["A65"], height=12.75)
 
     ws.print_area = f"A1:E{R}"
-    ws.page_setup.orientation = "portrait"
-    ws.page_setup.scale = 68
+    apply_page_setup(ws, S, fit_width=True)
     return title
