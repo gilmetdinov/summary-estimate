@@ -29,6 +29,10 @@ on:
         description: "Собрать с реальными реквизитами из секрета SMETA_CONFIG_JSON"
         type: boolean
         default: false
+      publish_release:
+        description: "Опубликовать собранный exe в Releases (только обычная сборка, не приватная)"
+        type: boolean
+        default: false
   push:
     branches: [master]
     tags: ["v*"]
@@ -59,6 +63,12 @@ jobs:
       - name: Run tests
         run: python -m pytest tests/ -q
 
+      - name: Guardrails (приватное не публикуем)
+        if: inputs.private_config == true && inputs.publish_release == true
+        run: |
+          Write-Error "Запрещено: приватная сборка (реальные реквизиты) не публикуется в Releases."
+          exit 1
+
       - name: Apply private config (only manual runs with the toggle)
         if: inputs.private_config == true
         env:
@@ -85,13 +95,28 @@ jobs:
           retention-days: 7
 
   release:
-    # Только для тегов v*: забирает exe из сборки выше и кладёт в Releases.
-    if: startsWith(github.ref, 'refs/tags/v')
+    # Публикация exe в Releases: либо push тега v*, либо ручной запуск
+    # с тумблером publish_release (тег v<версия> создастся сам из version.py).
+    # Приватные сборки сюда не попадают (см. guardrail выше).
+    if: startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'workflow_dispatch' && inputs.publish_release == true)
     needs: build
     runs-on: windows-latest
     permissions:
       contents: write
     steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve release tag
+        id: tag
+        shell: pwsh
+        run: |
+          if ("${{ github.ref }}".StartsWith("refs/tags/v")) {
+            "name=${{ github.ref_name }}" >> $env:GITHUB_OUTPUT
+          } else {
+            $v = (python -c "import sys; sys.path.insert(0,'.'); from version import __version__; print(__version__)")
+            "name=v$v" >> $env:GITHUB_OUTPUT
+          }
+
       - uses: actions/download-artifact@v4
         with:
           name: summary-estimate-exe
@@ -99,5 +124,6 @@ jobs:
 
       - uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ steps.tag.outputs.name }}
           files: dist/summary-estimate.exe
           generate_release_notes: true
