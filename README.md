@@ -55,6 +55,11 @@ python3 smeta_parser.py sources/raw.xlsx   # отдельно — проверк
 дефолтный `config.json` и иконка уже вшиты). На macOS/Linux `bash build.sh` даёт локальный
 бинарь для проверки. Перед сборкой при изменении эталона — `python3 make_template.py`.
 
+**Версии и раздача:** версия одна на всех — `version.py` (CalVer, дата релиза), видна
+в заголовке окна и в свойствах `.exe`. Сборка без Windows — через GitHub Actions
+(`.github/workflows/build-exe.yml`): push в `master` даёт exe в артефактах, push тега
+`v<версия>` (напр. `v2026.10.15`) публикует exe в **Releases** — сметчица качает оттуда.
+
 ### Файлы
 
 **Функциональные (коммитятся в репозиторий):**

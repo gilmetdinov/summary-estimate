@@ -1,17 +1,21 @@
 name: build-windows-exe
 
-# Сборка автономного neuro-estimate.exe на облачной Windows-машине.
+# Сборка автономного summary-estimate.exe на облачной Windows-машине.
 # PyInstaller не умеет кросс-компиляцию, поэтому Windows .exe собирается здесь.
 #
 # Запуск:
 #   - вручную: вкладка Actions -> "build-windows-exe" -> Run workflow
-#   - автоматически: при push/PR в ветку master
+#   - автоматически: при push/PR в ветку master (только сборка + артефакт)
+#   - релиз: при push тега v* (сборка + публикация exe в GitHub Releases)
 #
-# Результат: артефакт summary-estimate.exe (Actions -> выполнение -> Artifacts -> скачать).
+# Версия exe — из version.py. Новый релиз: поменять __version__,
+# закоммитить, поставить тег v<версия> (напр. v2026.10.15), запушить тег.
+# Сметчица качает exe со страницы Releases (артефакты протухают за 90 дней).
 on:
   workflow_dispatch: {}
   push:
     branches: [master]
+    tags: ["v*"]
   pull_request:
     branches: [master]
 
@@ -34,6 +38,10 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements-build.txt
+          pip install pytest
+
+      - name: Run tests
+        run: python -m pytest tests/ -q
 
       - name: Build exe (PyInstaller)
         run: pyinstaller --noconfirm --clean build.spec
@@ -44,3 +52,21 @@ jobs:
           name: summary-estimate-exe
           path: dist/summary-estimate.exe
           if-no-files-found: error
+
+  release:
+    # Только для тегов v*: забирает exe из сборки выше и кладёт в Releases.
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: summary-estimate-exe
+          path: dist
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: dist/summary-estimate.exe
+          generate_release_notes: true

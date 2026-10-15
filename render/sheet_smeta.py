@@ -12,6 +12,19 @@ from render.donor import Donor
 from render.style import appendix, apply_page_setup, clean_quotes, merge_block, put
 
 
+def _section_total_label(sec_title: str, si: int) -> str:
+    """Подпись итога раздела в формате эталона: 'Итого по разделу N <вид работ>'."""
+    t = (sec_title or "").strip()
+    prefix = f"Раздел {si}."
+    if t.startswith(prefix):
+        kind = t[len(prefix):].strip()
+    elif t.startswith(f"Раздел {si}"):
+        kind = t[len(f"Раздел {si}"):].strip(" .")
+    else:
+        kind = t
+    return f"Итого по разделу {si} {kind}".rstrip()
+
+
 def render_smeta(wb, sm: Smeta, d: Donor, title: str, cfg: Config) -> dict:
     """Рисует лист одной сметы. Возвращает {title, subtotal_addr, total_addr}."""
     ws = wb.create_sheet(title=title)
@@ -89,11 +102,7 @@ def render_smeta(wb, sm: Smeta, d: Donor, title: str, cfg: Config) -> dict:
                 put(ws, R, 5, val, S["E28"])
                 R += 1
         # --- итог по разделу — формулой по позициям (живой пересчёт, как в ГС) ---
-        if len(sm.sections) == 1:
-            sec_label = f"Итого по разделу 1 {sec.title.replace('Раздел 1.', '').strip()}"
-        else:
-            t = sec.title.strip()
-            sec_label = f"Итого по {t[:1].lower()}{t[1:]}" if t else f"Итого по разделу {si}"
+        sec_label = _section_total_label(sec.title, si)
         sec_sum = ("=SUM(" + ",".join(f"E{r}" for r in item_rows) + ")"
                    if item_rows else None)
         # колонка D (4) пишется явно: без неё у ячейки нет границ -> «дыра» в рамке таблицы
