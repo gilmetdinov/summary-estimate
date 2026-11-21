@@ -49,6 +49,9 @@ def test_split_object_no_tail():
 def test_suffix_kind_mapping():
     assert SUFFIX_KIND["01.01"].startswith("Проектные работы")
     assert SUFFIX_KIND["03"] == "Инженерно-геодезические изыскания"
+    # первая группа суффикса — стадия: 01 = проектная, 02 = рабочая документация
+    assert SUFFIX_KIND["01.02"] == SUFFIX_KIND["01"]
+    assert SUFFIX_KIND["02.01"] == SUFFIX_KIND["02"]
 
 
 # --- parse_sheet ---

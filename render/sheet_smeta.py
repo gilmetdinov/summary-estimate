@@ -9,7 +9,7 @@ from openpyxl.utils import get_column_letter
 from smeta_parser import Smeta
 from config import Config
 from render.donor import Donor
-from render.style import appendix, apply_page_setup, clean_quotes, merge_block, put
+from render.style import appendix, apply_page_setup, clean_quotes, merge_block, put, table_header
 
 
 def _section_total_label(sec_title: str, si: int) -> str:
@@ -68,10 +68,7 @@ def render_smeta(wb, sm: Smeta, d: Donor, title: str, cfg: Config) -> dict:
     put(ws, 18, 1, sm.price_level, S["A18"], height=15.0)
 
     # --- шапка таблицы ---
-    hdr = ["№ пп",
-           "Наименование\nобъекта проектирования или вида проектных работ",
-           "Наименование, номера глав, таблиц, параграфов и пунктов МНЗ на проектные работы",
-           "Расчет стоимости", "Сметная стоимость, тыс. руб."]
+    hdr = table_header(sm.suffix)
     for c, txt in enumerate(hdr, start=1):
         put(ws, 20, c, txt, S[f"{get_column_letter(c)}20"], height=36.0)
     for c in range(1, 6):

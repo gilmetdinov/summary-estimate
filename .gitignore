@@ -22,6 +22,7 @@ dist/
 # --- Готовые результаты конвертации (вывод программы, не коммитим) ---
 *.xlsx
 !template.xlsx
+!examples/demo_raw.xlsx
 
 # --- Локальные настройки инструментов ---
 .claude/settings.local.json

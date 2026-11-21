@@ -38,10 +38,11 @@ SUFFIX_KIND = {
     # 2-level numbering (example2: "01.01" → suffix "01")
     "01": "Проектные работы (проектная документация)",
     "02": "Проектные работы (рабочая документация)",
-    # 3-level numbering (original: "04.01.01" → suffix "01.01")
+    # 3-level numbering (original: "04.01.01" → suffix "01.01"):
+    # первая группа — стадия (01 = ПД, 02 = РД), как и в 2-уровневой схеме выше
     "01.01": "Проектные работы (проектная документация)",
-    "01.02": "Проектные работы (рабочая документация)",
-    "02.01": "Проектные работы (проектная документация)",
+    "01.02": "Проектные работы (проектная документация)",
+    "02.01": "Проектные работы (рабочая документация)",
     "02.02": "Проектные работы (рабочая документация)",
     "03":    "Инженерно-геодезические изыскания",
 }
@@ -255,8 +256,10 @@ def parse_workbook(path: str) -> list[Smeta]:
 
 
 if __name__ == "__main__":
+    import os
     import sys
-    path = sys.argv[1] if len(sys.argv) > 1 else "raw.xlsx"
+    path = sys.argv[1] if len(sys.argv) > 1 else os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), "examples", "demo_raw.xlsx")
     smetas = parse_workbook(path)
     print(f"Распарсено смет: {len(smetas)}\n")
     for sm in smetas:

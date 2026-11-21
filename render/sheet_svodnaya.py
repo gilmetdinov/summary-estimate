@@ -116,16 +116,17 @@ def render_svodnaya(wb, smetas: list[Smeta], refs: list[dict], d: Donor, cfg: Co
         # O/P: ед. стоимость и стоимость за единицу (всегда, даже без ввода).
         # Строка ед. стоимости проектных работ — первая строка именно проектных
         # работ (не изысканий/экспертизы), а не просто первый entry списка.
+        # IFERROR: ед. стоимость по умолчанию пустая -> без защиты будет #DIV/0!.
         if first_proj and en.get("_placeholder") is None and en["column"] == "proj":
             ws.cell(row=R, column=15).value = cfg.unit_cost_proj
-            ws.cell(row=R, column=16).value = f"=F{R}/O{R}*1000"
+            ws.cell(row=R, column=16).value = f'=IFERROR(F{R}/O{R}*1000,"")'
             first_proj = False
         elif en.get("_placeholder") == "izysk":
             ws.cell(row=R, column=15).value = cfg.unit_cost_izysk
-            ws.cell(row=R, column=16).value = f"=E{R}/O{R}*1000"
+            ws.cell(row=R, column=16).value = f'=IFERROR(E{R}/O{R}*1000,"")'
         elif en.get("_placeholder") == "gosexp":
             ws.cell(row=R, column=15).value = cfg.unit_cost_gosexp
-            ws.cell(row=R, column=16).value = f"=F{R}/O{R}*1000"
+            ws.cell(row=R, column=16).value = f'=IFERROR(F{R}/O{R}*1000,"")'
         R += 1
 
     put(ws, R, 1, "Всего без НДС", V["A26"], c2=4)

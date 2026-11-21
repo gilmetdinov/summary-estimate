@@ -32,12 +32,16 @@ from config import load_config  # noqa: F401 — используется CLI-р
 
 if __name__ == "__main__":
     import argparse
+    import os
+
+    _here = os.path.dirname(os.path.abspath(__file__))
 
     ap = argparse.ArgumentParser(
         description="Конвертер выгрузки смет ПИР -> фирменный печатный формат.")
     ap.add_argument("inputs", nargs="*", help="выгрузка(и) ГС (xlsx)")
     ap.add_argument("-o", "--output", help="файл результата (1 вход) или папка (батч)")
-    ap.add_argument("--config", default="config.json", help="config.json с реквизитами")
+    ap.add_argument("--config", default=os.path.join(_here, "config.json"),
+                    help="config.json с реквизитами (по умолчанию — рядом со скриптом)")
     ap.add_argument("--donor", default=DEFAULT_DONOR, help="файл-донор оформления (мастер-шаблон)")
     args = ap.parse_args()
 
@@ -52,6 +56,10 @@ if __name__ == "__main__":
         print(f"OK -> {inputs[1]}")
     elif len(inputs) == 1:
         out = args.output or suggest_name(inputs[0])
+        # `-o папка/` для одного входа: имя файла подбирается по содержимому
+        if os.path.isdir(out) or out.endswith(("/", os.sep)):
+            os.makedirs(out, exist_ok=True)
+            out = os.path.join(out, suggest_name(inputs[0]))
         convert(inputs[0], out, args.donor, cfg)
         print(f"OK -> {out}")
     else:

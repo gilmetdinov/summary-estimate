@@ -6,7 +6,7 @@ LibreOffice при конвертации в PDF пересчитывает вс
 получился ненулевым, значит формулы корректны и файл открывается реальным офисом.
 
 Запуск:
-    python3 smoke_test.py                 # на sources/raw.xlsx
+    python3 smoke_test.py                 # на examples/demo_raw.xlsx (вымышленные данные)
     python3 smoke_test.py myraw.xlsx ...  # на своих выгрузках
 
 Возвращает код 0 при успехе, иначе !=0 (годится для CI).
@@ -27,6 +27,7 @@ SOFFICE_CANDIDATES = [
     r"C:\Program Files\LibreOffice\program\soffice.exe",      # Windows
 ]
 MIN_PDF_BYTES = 2000  # пустой/битый PDF будет меньше
+HERE = os.path.dirname(os.path.abspath(__file__))
 
 
 def find_soffice() -> str | None:
@@ -50,8 +51,8 @@ def render_pdf(xlsx_path: str, out_dir: str, soffice: str) -> str:
 
 
 def main(argv: list[str]) -> int:
-    inputs = argv or ["sources/raw.xlsx"]
-    cfg = load_config("config.json")
+    inputs = argv or [os.path.join(HERE, "examples", "demo_raw.xlsx")]
+    cfg = load_config(os.path.join(HERE, "config.json"))
     soffice = find_soffice()
     if not soffice:
         print("!! LibreOffice не найден — smoke-тест неполный (проверена только конвертация).")

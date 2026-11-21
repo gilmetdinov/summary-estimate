@@ -53,6 +53,21 @@ def merge_block(ws, cell_range, value, donor_cell):
     ws.merge_cells(cell_range)
 
 
+# шапка таблицы сметы: проектные работы / изыскания (лист сметы «.03»)
+TABLE_HEADER = ["№ пп",
+                "Наименование\nобъекта проектирования или вида проектных работ",
+                "Наименование, номера глав, таблиц, параграфов и пунктов МНЗ на проектные работы",
+                "Расчет стоимости", "Сметная стоимость, тыс. руб."]
+TABLE_HEADER_IZYSK = ["№ пп",
+                      "Наименование\nобъекта изысканий или вида изыскательских работ",
+                      "Наименование, номера глав, таблиц, параграфов и пунктов НЗ на изыскательские работы",
+                      "Расчет стоимости", "Сметная стоимость, тыс. руб."]
+
+
+def table_header(suffix: str) -> list[str]:
+    return TABLE_HEADER_IZYSK if suffix == "03" else TABLE_HEADER
+
+
 def appendix(suffix: str) -> str:
     return SUFFIX_APP.get(suffix, suffix.replace("0", "").replace(".", "."))
 

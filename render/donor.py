@@ -6,14 +6,20 @@
 доступа к донору и имена листов-доноров.
 """
 from __future__ import annotations
+import os
 import re
+import sys
 
 import openpyxl
 
 # имена листов-доноров в мастер-шаблоне template.xlsx (см. make_template.py)
 SMETA_DONOR = "ШАБЛОН_смета"
 SVOD_DONOR = "ШАБЛОН_сводная"
-DEFAULT_DONOR = "template.xlsx"
+# template.xlsx лежит в корне проекта (рядом с smeta_render.py), в собранном exe — в
+# _MEIPASS. Путь абсолютный, чтобы CLI/тесты работали из любого рабочего каталога.
+BASE_DIR = getattr(sys, "_MEIPASS",
+                   os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+DEFAULT_DONOR = os.path.join(BASE_DIR, "template.xlsx")
 
 
 class Donor:

@@ -8,7 +8,7 @@ from openpyxl.utils import get_column_letter
 
 from config import Config
 from render.donor import Donor
-from render.style import apply_page_setup, clean_quotes, merge_block, put
+from render.style import apply_page_setup, clean_quotes, merge_block, put, table_header
 
 
 def render_izyskaniya_placeholder(wb, d: Donor, cfg: Config,
@@ -54,10 +54,7 @@ def render_izyskaniya_placeholder(wb, d: Donor, cfg: Config,
     put(ws, 16, 1, "(наименование организации)", S["A16"], c2=5, height=15.0)
     put(ws, 18, 1, "Составлена в уровне цен на ____ квартал 20__ г.", S["A18"], height=15.0)
 
-    hdr = ["№ пп",
-           "Наименование\nобъекта проектирования или вида проектных работ",
-           "Наименование, номера глав, таблиц, параграфов и пунктов МНЗ на проектные работы",
-           "Расчет стоимости", "Сметная стоимость, тыс. руб."]
+    hdr = table_header("03")
     for c, txt in enumerate(hdr, start=1):
         put(ws, 20, c, txt, S[f"{get_column_letter(c)}20"], height=36.0)
     for c in range(1, 6):
